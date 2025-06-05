@@ -4,7 +4,7 @@ let isRecordingLocally = false;
 let originalPushState = null;
 let originalReplaceState = null;
 
-// Helper: grab outerHTML + input/textarea value (if any)
+// Helper: capture outerHTML + possible input/textarea value
 function captureElementInfo(el) {
   const html = el.outerHTML;
   let info = `/* ELEMENT HTML */\n${html}`;
@@ -22,14 +22,34 @@ function recordEvent(data) {
   chrome.runtime.sendMessage({ action: 'recordEvent', data });
 }
 
-// Click‐handler: capture outerHTML + value and send to background
+// Click handler: log both the clicked node AND its nearest <li class="dropdown mega-dropdown"> ancestor, if any.
 function onClickHandler(event) {
-  const el = event.target;
-  const snippet = captureElementInfo(el);
-  recordEvent(snippet);
+  // 1) Find the actual clicked node (could be <img>, <span>, text node, etc.)
+  const clicked = event.target;
+
+  // 2) If the click occurred inside a <li class="dropdown mega-dropdown">, log that <li>
+  const dropdownLi = clicked.closest('li.dropdown.mega-dropdown');
+  if (dropdownLi) {
+    // Log the parent <li> first
+    const parentSnippet = `/* DROPDOWN <li> ELEMENT HTML */\n${dropdownLi.outerHTML}`;
+    recordEvent(parentSnippet);
+
+    // Optionally, you can also log the inner <a> that was clicked.
+    // But if you just want the <li>, comment out the next two lines.
+    const innerAnchor = clicked.closest('a');
+    if (innerAnchor) {
+      const anchorSnippet = `/* INNER <a> ELEMENT HTML */\n${innerAnchor.outerHTML}`;
+      recordEvent(anchorSnippet);
+    }
+  }
+  else {
+    // 3) Otherwise, no dropdown ancestor—fall back to logging exactly event.target
+    const snippet = captureElementInfo(clicked);
+    recordEvent(snippet);
+  }
 }
 
-// URL‐change handler: send a snippet whenever the URL changes
+// URL-change handler: send a snippet whenever the URL changes
 function onUrlChange() {
   const snippet = `/* URL CHANGE */\n${location.href}`;
   recordEvent(snippet);
@@ -68,7 +88,7 @@ function startCapture() {
   if (isRecordingLocally) return;
   isRecordingLocally = true;
 
-  // 1) Capture the current URL right away
+  // 1) Capture the current URL immediately
   onUrlChange();
 
   // 2) Listen to future click events
@@ -91,19 +111,19 @@ function stopCapture() {
   restoreHistoryMethods();
 }
 
-// Ask the background script: are we currently recording?
+// On injection, ask background: “are we in recording mode?”
 chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
   if (response && response.status === 'recording') {
     startCapture();
   }
 });
 
-// Listen for “startRecording” / “stopRecording” messages from popup
+// Listen for start/stop commands from popup.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'startRecording') {
     startCapture();
   } else if (message.action === 'stopRecording') {
     stopCapture();
   }
-  // We don’t need to send any response back here
+  // no need to send a reply here
 });
