@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      min-width: 240px;
+      font-family: Arial, sans-serif;
+      padding: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #startBtn {
+      background-color: #4285f4;
+      color: white;
+    }
+    #status {
+      font-family: monospace;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #stopBtn {
+      background-color: #d32f2f;
+      color: white;
+    }
+    #copyBtn {
+      background-color: #4caf50;
+      color: white;
+    }
+    #resetBtn {
+      background-color: #fbc02d;
+      color: white;
+    }
+    #idleUI,
+    #recUI {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Idle state: only Start Button -->
+  <div id="idleUI">
+    <button id="startBtn">Start Recording</button>
+  </div>
+
+  <!-- Recording state: show counter, Stop, Copy, Reset -->
+  <div id="recUI">
+    <div id="status">Recorded: 0</div>
+    <button id="stopBtn">Stop Recording</button>
+    <button id="copyBtn">Copy to Clipboard</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
